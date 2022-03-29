@@ -1,1 +1,2 @@
-MemoBusTool
+#本项目为Memobus通信工具
+##尚未完成，当前不可用
