@@ -15,7 +15,7 @@ namespace MemoBusTool
         private Socket socket;//用于通信的套接字
         private IPAddress ipAddress;//服务器的IP地址
         private int port;//服务器的端口
-        private byte slaveNum;
+        private byte cpuNum;
 
         private IPEndPoint ipEndPoint;//服务器的通信节点
         private Thread readThread;//接受响应线程
@@ -23,7 +23,7 @@ namespace MemoBusTool
         private int overTime = 5000;//ping的超时时间
         private byte[] recData;//接收到的数据包
 
-        public static UInt16 ComSessionNum = 0;//生成用公共会话编号
+        public static byte ComSessionNum = 0;//生成用公共会话编号
 
         #region 构造方法及GetSet
 
@@ -42,10 +42,10 @@ namespace MemoBusTool
             get => overTime;
             set => overTime = value;
         }
-        public byte SlaveNum
+        public byte CpuNum
         {
-            get => slaveNum;
-            set => slaveNum = value;
+            get => cpuNum;
+            set => cpuNum = value;
         }
 
         /// <summary>
@@ -53,13 +53,13 @@ namespace MemoBusTool
         /// </summary>
         /// <param name="iPAddress">服务器IP</param>
         /// <param name="port">服务器端口</param>
-        public MemobusTool(string iPAddress, int port, byte slaveNum)
+        public MemobusTool(string iPAddress, int port, byte cpuNum)
         {
             this.ipAddress = IPAddress.Parse(iPAddress);
             this.port = port;
             this.ipEndPoint = new IPEndPoint(ipAddress, port);
             this.ping = new Ping();
-            this.slaveNum = slaveNum;
+            this.cpuNum = cpuNum;
         }
 
         /*public InovanceModbusTCPTool()
@@ -144,7 +144,7 @@ namespace MemoBusTool
 
         #endregion
 
-        public static UInt16 GetSessionNum()
+        public static byte GetSessionNum()
         {
             return ComSessionNum++;
         }
@@ -217,122 +217,27 @@ namespace MemoBusTool
         }
         #region 读取数据
 
-        #region 读取bool量
-
-        /// <summary>
-        /// 读取单个bool量
-        /// </summary>
-        /// <param name="slaveNum">从站号</param>
-        /// <param name="startAddress">读取的地址</param>
-        /// <returns></returns>
-        public ReadResult<bool> ReadBoolean(string startAddress)
-        {
-            ReadResult<bool> readResult = new ReadResult<bool>();//预备结果
-            CmdCode cmdCode;
-            ushort address = 0;
-            if (startAddress.Contains("Q") || startAddress.Contains("q"))
-            {
-                cmdCode = CmdCode.ReadBooleanQ;
-                address = ushort.Parse(startAddress.Substring(1));
-            }
-            else if (startAddress.Contains("SM") || startAddress.Contains("sm"))
-            {
-                cmdCode = CmdCode.ReadBooleanSM;
-                address = ushort.Parse(startAddress.Substring(2));
-            }
-            else
-            {
-                return readResult;
-            }
-
-            RequestCmd cmd = new RequestCMDRead(slaveNum, cmdCode, address, 1);//创建请求报文
-            CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
-            bool v = SendTo(cmd);//发送请求
-            Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
-            checkThread.IsBackground = true;
-            checkThread.Start(checkRes);//启动线程，参数为具有本会话号的对象
-            checkThread.Join(overTime);//利用检查线程阻塞本线程，超时时间由程序指定
-            checkThread.Abort();
-
-            readResult.isSuccess = checkRes.FindSuccess;
-            if (!checkRes.FindSuccess)
-            {
-                return readResult;
-            }
-
-            readResult.result = ByteToBool(checkRes.Respones.data[9]);
-            return readResult;
-        }
-
-        /// <summary>
-        /// 读取连续的多个bool量
-        /// </summary>
-        /// <param name="slaveNum">从站号</param>
-        /// <param name="startAddress">起始地址</param>
-        /// <param name="reqNum">读取长度</param>
-        /// <returns></returns>
-        public ReadResult<bool[]> ReadBoolean(string startAddress, ushort reqNum)
-        {
-            ReadResult<bool[]> readResult = new ReadResult<bool[]>();//预备结果
-            CmdCode cmdCode;
-            ushort address = 0;
-            if (startAddress.Contains("Q") || startAddress.Contains("q"))
-            {
-                cmdCode = CmdCode.ReadBooleanQ;
-                address = ushort.Parse(startAddress.Substring(1));
-            }
-            else if (startAddress.Contains("SM") || startAddress.Contains("sm"))
-            {
-                cmdCode = CmdCode.ReadBooleanSM;
-                address = ushort.Parse(startAddress.Substring(2));
-            }
-            else
-            {
-                return readResult;
-            }
-            RequestCmd cmd = new RequestCMDRead(slaveNum, cmdCode, address, reqNum);//创建请求报文
-            CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
-            bool v = SendTo(cmd);//发送请求
-            Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
-            checkThread.IsBackground = true;
-            checkThread.Start(checkRes);//启动线程，参数为具有本会话号的对象
-            checkThread.Join(overTime);//利用检查线程阻塞本线程，超时时间由程序指定
-            checkThread.Abort();
-
-            readResult.isSuccess = checkRes.FindSuccess;//结果查找成功
-            if (!checkRes.FindSuccess)//如果查找不成功则直接返回失败结果
-            {
-                return readResult;
-            }
-            byte[] resultByte = new byte[checkRes.Respones.data[8]];//如果查找成功，则新建结果数组
-            Array.ConstrainedCopy(checkRes.Respones.data, 9, resultByte, 0, checkRes.Respones.data[8]);//从结果报文中获取结果内容
-            readResult.result = ByteToBool(resultByte, reqNum);//将byte数组的结果转换为bool数组
-            return readResult;
-        }
-
-        #endregion
-
         #region 读取UInt16量
 
         /// <summary>
         /// 读取一个字
         /// </summary>
-        /// <param name="slaveNum">从站号</param>
+        /// <param name="cpuNum">从站号</param>
         /// <param name="startAddress">读取的地址</param>
         /// <returns>读取到的字</returns>
         public ReadResult<UInt16> ReadU16(string startAddress)
         {
             ReadResult<UInt16> readResult = new ReadResult<UInt16>();//预备结果
-            CmdCode cmdCode;
+            SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("M") || startAddress.Contains("m"))
             {
-                cmdCode = CmdCode.ReadWordM;
+                cmdCode = SFC.ReadWordM;
                 address = ushort.Parse(startAddress.Substring(1));
             }
             else if (startAddress.Contains("SD") || startAddress.Contains("sd"))
             {
-                cmdCode = CmdCode.ReadWordSD;
+                cmdCode = SFC.ReadWordSD;
                 address = ushort.Parse(startAddress.Substring(2));
             }
             else
@@ -340,7 +245,7 @@ namespace MemoBusTool
                 return readResult;
             }
 
-            RequestCmd cmd = new RequestCMDRead(slaveNum, cmdCode, address, 1);//创建请求报文
+            RequestCmd cmd = new RequestCMDRead(cpuNum, cmdCode, address, 1);//创建请求报文
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -364,23 +269,23 @@ namespace MemoBusTool
         /// <summary>
         /// 读取多个字
         /// </summary>
-        /// <param name="slaveNum">从站号</param>
+        /// <param name="cpuNum">从站号</param>
         /// <param name="startAddress">起始地址</param>
         /// <param name="reqNum">读取长度</param>
         /// <returns>读取到的字数组</returns>
         public ReadResult<UInt16[]> ReadU16(string startAddress, ushort reqNum)
         {
             ReadResult<UInt16[]> readResult = new ReadResult<UInt16[]>();//预备结果
-            CmdCode cmdCode;
+            SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("M") || startAddress.Contains("m"))
             {
-                cmdCode = CmdCode.ReadWordM;
+                cmdCode = SFC.ReadWordM;
                 address = ushort.Parse(startAddress.Substring(1));
             }
             else if (startAddress.Contains("SD") || startAddress.Contains("sd"))
             {
-                cmdCode = CmdCode.ReadWordSD;
+                cmdCode = SFC.ReadWordSD;
                 address = ushort.Parse(startAddress.Substring(2));
             }
             else
@@ -388,7 +293,7 @@ namespace MemoBusTool
                 return readResult;
             }
 
-            RequestCmd cmd = new RequestCMDRead(slaveNum, cmdCode, address, reqNum);//创建请求报文
+            RequestCmd cmd = new RequestCMDRead(cpuNum, cmdCode, address, reqNum);//创建请求报文
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -416,22 +321,22 @@ namespace MemoBusTool
         /// <summary>
         /// 读取一个字
         /// </summary>
-        /// <param name="slaveNum">从站号</param>
+        /// <param name="cpuNum">从站号</param>
         /// <param name="startAddress">读取的地址</param>
         /// <returns>读取到的字</returns>
         public ReadResult<Int16> Read16(string startAddress)
         {
             ReadResult<Int16> readResult = new ReadResult<Int16>();//预备结果
-            CmdCode cmdCode;
+            SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("M") || startAddress.Contains("m"))
             {
-                cmdCode = CmdCode.ReadWordM;
+                cmdCode = SFC.ReadWordM;
                 address = ushort.Parse(startAddress.Substring(1));
             }
             else if (startAddress.Contains("SD") || startAddress.Contains("sd"))
             {
-                cmdCode = CmdCode.ReadWordSD;
+                cmdCode = SFC.ReadWordSD;
                 address = ushort.Parse(startAddress.Substring(2));
             }
             else
@@ -439,7 +344,7 @@ namespace MemoBusTool
                 return readResult;
             }
 
-            RequestCmd cmd = new RequestCMDRead(slaveNum, cmdCode, address, 1);//创建请求报文
+            RequestCmd cmd = new RequestCMDRead(cpuNum, cmdCode, address, 1);//创建请求报文
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -466,23 +371,23 @@ namespace MemoBusTool
         /// <summary>
         /// 读取多个字
         /// </summary>
-        /// <param name="slaveNum">从站号</param>
+        /// <param name="cpuNum">从站号</param>
         /// <param name="startAddress">起始地址</param>
         /// <param name="reqNum">读取长度</param>
         /// <returns>读取到的字数组</returns>
         public ReadResult<Int16[]> Read16(string startAddress, ushort reqNum)
         {
             ReadResult<Int16[]> readResult = new ReadResult<Int16[]>();//预备结果
-            CmdCode cmdCode;
+            SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("M") || startAddress.Contains("m"))
             {
-                cmdCode = CmdCode.ReadWordM;
+                cmdCode = SFC.ReadWordM;
                 address = ushort.Parse(startAddress.Substring(1));
             }
             else if (startAddress.Contains("SD") || startAddress.Contains("sd"))
             {
-                cmdCode = CmdCode.ReadWordSD;
+                cmdCode = SFC.ReadWordSD;
                 address = ushort.Parse(startAddress.Substring(2));
             }
             else
@@ -490,7 +395,7 @@ namespace MemoBusTool
                 return readResult;
             }
 
-            RequestCmd cmd = new RequestCMDRead(slaveNum, cmdCode, address, reqNum);//创建请求报文
+            RequestCmd cmd = new RequestCMDRead(cpuNum, cmdCode, address, reqNum);//创建请求报文
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -524,7 +429,7 @@ namespace MemoBusTool
         /// <summary>
         /// 读取一个双字
         /// </summary>
-        /// <param name="slaveNum">从站号</param>
+        /// <param name="cpuNum">从站号</param>
         /// <param name="startAddress">读取的地址</param>
         /// <returns>读取到的字</returns>
         public ReadResult<uint> ReadU32(string startAddress)
@@ -544,7 +449,7 @@ namespace MemoBusTool
         /// <summary>
         /// 读取多个双字
         /// </summary>
-        /// <param name="slaveNum">从站号</param>
+        /// <param name="cpuNum">从站号</param>
         /// <param name="startAddress">起始地址</param>
         /// <param name="reqNum">读取长度</param>
         /// <returns>读取到的字数组</returns>
@@ -573,7 +478,7 @@ namespace MemoBusTool
         /// <summary>
         /// 读取一个双字
         /// </summary>
-        /// <param name="slaveNum">从站号</param>
+        /// <param name="cpuNum">从站号</param>
         /// <param name="startAddress">读取的地址</param>
         /// <returns>读取到的字</returns>
         public ReadResult<int> Read32(string startAddress)
@@ -595,7 +500,7 @@ namespace MemoBusTool
         /// <summary>
         /// 读取多个双字
         /// </summary>
-        /// <param name="slaveNum">从站号</param>
+        /// <param name="cpuNum">从站号</param>
         /// <param name="startAddress">起始地址</param>
         /// <param name="reqNum">读取长度</param>
         /// <returns>读取到的字数组</returns>
@@ -629,16 +534,16 @@ namespace MemoBusTool
 
         public bool Write(string startAddress, bool value)
         {
-            CmdCode cmdCode;
+            SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("Q") || startAddress.Contains("q"))
             {
-                cmdCode = CmdCode.WriteSingleBooleanQ;
+                cmdCode = SFC.WriteSingleBooleanQ;
                 address = ushort.Parse(startAddress.Substring(1));
             }
             else if (startAddress.Contains("SM") || startAddress.Contains("sm"))
             {
-                cmdCode = CmdCode.WriteSingleBooleanSM;
+                cmdCode = SFC.WriteSingleBooleanSM;
                 address = ushort.Parse(startAddress.Substring(2));
             }
             else
@@ -646,7 +551,7 @@ namespace MemoBusTool
                 return false;
             }
             UInt16 i = (UInt16)(value ? 0xff00 : 0);
-            RequestCmd cmd = new RequestCMDWriteSingle(slaveNum, cmdCode, address, i);
+            RequestCmd cmd = new RequestCMDWriteSingle(cpuNum, cmdCode, address, i);
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -664,23 +569,23 @@ namespace MemoBusTool
 
         public bool Write(string startAddress, UInt16 value)
         {
-            CmdCode cmdCode;
+            SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("M") || startAddress.Contains("m"))
             {
-                cmdCode = CmdCode.WriteSingleWordM;
+                cmdCode = SFC.WriteSingleWordM;
                 address = ushort.Parse(startAddress.Substring(1));
             }
             else if (startAddress.Contains("SD") || startAddress.Contains("sd"))
             {
-                cmdCode = CmdCode.WriteSingleWordSD;
+                cmdCode = SFC.WriteSingleWordSD;
                 address = ushort.Parse(startAddress.Substring(2));
             }
             else
             {
                 return false;
             }
-            RequestCmd cmd = new RequestCMDWriteSingle(slaveNum, cmdCode, address, value);
+            RequestCmd cmd = new RequestCMDWriteSingle(cpuNum, cmdCode, address, value);
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -698,23 +603,23 @@ namespace MemoBusTool
 
         public bool Write(string startAddress, Int16 value)
         {
-            CmdCode cmdCode;
+            SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("M") || startAddress.Contains("m"))
             {
-                cmdCode = CmdCode.WriteSingleWordM;
+                cmdCode = SFC.WriteSingleWordM;
                 address = ushort.Parse(startAddress.Substring(1));
             }
             else if (startAddress.Contains("SD") || startAddress.Contains("sd"))
             {
-                cmdCode = CmdCode.WriteSingleWordSD;
+                cmdCode = SFC.WriteSingleWordSD;
                 address = ushort.Parse(startAddress.Substring(2));
             }
             else
             {
                 return false;
             }
-            RequestCmd cmd = new RequestCMDWriteSingle(slaveNum, cmdCode, address, (UInt16)value);
+            RequestCmd cmd = new RequestCMDWriteSingle(cpuNum, cmdCode, address, (UInt16)value);
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -757,16 +662,16 @@ namespace MemoBusTool
 
         public bool Write(string startAddress, bool[] value)
         {
-            CmdCode cmdCode;
+            SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("Q") || startAddress.Contains("q"))
             {
-                cmdCode = CmdCode.WriteMoreBooleanQ;
+                cmdCode = SFC.WriteMoreBooleanQ;
                 address = ushort.Parse(startAddress.Substring(1));
             }
             else if (startAddress.Contains("SM") || startAddress.Contains("sm"))
             {
-                cmdCode = CmdCode.WriteMoreBooleanSM;
+                cmdCode = SFC.WriteMoreBooleanSM;
                 address = ushort.Parse(startAddress.Substring(2));
             }
             else
@@ -774,7 +679,7 @@ namespace MemoBusTool
                 return false;
             }
             byte[] vs = BoolsToBytes(value);
-            RequestCmd cmd = new RequestCMDWriteMore(slaveNum, cmdCode, address, (UInt16)value.Length, vs);
+            RequestCmd cmd = new RequestCMDWriteMore(cpuNum, cmdCode, address, (UInt16)value.Length, vs);
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -797,16 +702,16 @@ namespace MemoBusTool
 
         public bool Write(string startAddress, UInt16[] value)
         {
-            CmdCode cmdCode;
+            SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("M") || startAddress.Contains("m"))
             {
-                cmdCode = CmdCode.WriteMoreWordM;
+                cmdCode = SFC.WriteMoreWordM;
                 address = ushort.Parse(startAddress.Substring(1));
             }
             else if (startAddress.Contains("SD") || startAddress.Contains("sd"))
             {
-                cmdCode = CmdCode.WriteMoreWordSD;
+                cmdCode = SFC.WriteMoreWordSD;
                 address = ushort.Parse(startAddress.Substring(2));
             }
             else
@@ -814,7 +719,7 @@ namespace MemoBusTool
                 return false;
             }
             byte[] vs = Uint16ToBytes(value);
-            RequestCmd cmd = new RequestCMDWriteMore(slaveNum, cmdCode, address, (UInt16)value.Length, vs);
+            RequestCmd cmd = new RequestCMDWriteMore(cpuNum, cmdCode, address, (UInt16)value.Length, vs);
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -837,16 +742,16 @@ namespace MemoBusTool
 
         public bool Write(string startAddress, Int16[] value)
         {
-            CmdCode cmdCode;
+            SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("M") || startAddress.Contains("m"))
             {
-                cmdCode = CmdCode.WriteMoreWordM;
+                cmdCode = SFC.WriteMoreWordM;
                 address = ushort.Parse(startAddress.Substring(1));
             }
             else if (startAddress.Contains("SD") || startAddress.Contains("sd"))
             {
-                cmdCode = CmdCode.WriteMoreWordSD;
+                cmdCode = SFC.WriteMoreWordSD;
                 address = ushort.Parse(startAddress.Substring(2));
             }
             else
@@ -854,7 +759,7 @@ namespace MemoBusTool
                 return false;
             }
             byte[] vs = Int16ToBytes(value);
-            RequestCmd cmd = new RequestCMDWriteMore(slaveNum, cmdCode, address, (UInt16)value.Length, vs);
+            RequestCmd cmd = new RequestCMDWriteMore(cpuNum, cmdCode, address, (UInt16)value.Length, vs);
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -904,7 +809,7 @@ namespace MemoBusTool
                 return false;
             }
             byte[] vs = Uint16ToBytes(tempArr);
-            RequestCmd cmd = new RequestCMDWriteMore(slaveNum, cmdCode, address, (UInt16)(value.Length * 2), vs);
+            RequestCmd cmd = new RequestCMDWriteMore(cpuNum, cmdCode, address, (UInt16)(value.Length * 2), vs);
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -1078,148 +983,227 @@ namespace MemoBusTool
         }
     }
 
-    public enum CmdCode : byte
+    /// <summary>
+    /// 主功能码
+    /// </summary>
+    public enum MFC : byte
     {
         //命令码
-        ReadBooleanQ = 0x01,//读线圈Q
-        ReadBooleanSM = 0x31,//读线圈SM
+        /// <summary>
+        /// 标准
+        /// </summary>
+        Standard = 0x20,
 
-        ReadWordM = 0x03,//读寄存器M
-        ReadWordSD = 0x33,//读寄存器SD
+        /// <summary>
+        /// 扩展
+        /// </summary>
+        Extend = 0x43,
+    }
 
-        WriteSingleBooleanQ = 0x05,//写单个线圈Q
-        WriteSingleBooleanSM = 0x35,//写单个线圈SM
+    /// <summary>
+    /// 子功能码
+    /// </summary>
+    public enum SFC : byte
+    {
+        //命令码
+        /// <summary>
+        /// 读取多个16位变量
+        /// </summary>
+        Read16More = 0x49,
 
-        WriteSingleWordM = 0x06,//写单个寄存器M
-        WriteSingleWordSD = 0x36,//写单个寄存器SD
+        /// <summary>
+        /// 写入多个16位变量
+        /// </summary>
+        Write16More = 0x4B,
+    }
 
-        WriteMoreBooleanQ = 0x0F,//写多个线圈Q
-        WriteMoreBooleanSM = 0x3F,//写多个线圈SM
+    public enum DateType : byte
+    {
+        /// <summary>
+        /// 保持寄存器
+        /// </summary>
+        M = 0x4D,
 
-        WriteMoreWordM = 0x10,//写多个寄存器M
-        WriteMoreWordSD = 0x40//写多个线圈SD
+        /// <summary>
+        /// 数据寄存器
+        /// </summary>
+        G = 0x47,
+
+        /// <summary>
+        /// 输入寄存器
+        /// </summary>
+        I = 0x49,
+
+        /// <summary>
+        /// 输出寄存器
+        /// </summary>
+        O = 0x4F,
+
+        /// <summary>
+        /// 系统寄存器
+        /// </summary>
+        S = 0x53,
+    }
+
+    /// <summary>
+    /// 指示要操作的数据长度
+    /// </summary>
+    public enum DateLength : byte
+    {
+        /// <summary>
+        /// 16位
+        /// </summary>
+        Word = 2,
+
+        /// <summary>
+        /// 32位
+        /// </summary>
+        DWord = 3,
     }
 
     public abstract class RequestCmd
     {
-        public UInt16 sessionNum;//会话编号
-        public UInt16 tag;//modbusTCP表示符 0
-        public UInt16 length;//后续报文的字节长度
-        public byte slaveNum;//从站号
-        public CmdCode cmdCode;//命令码
+        //218报文头关键值
+        public byte cmdType = 11;//Memobus指令为11，响应为19，通用信息12
+        public byte sessionNum;//会话识别号(序列号),每次自增
+        public byte tragetChannelNum = 0;//目标通道编号，MP系列以外的设备均为00
+        public byte sourceChannelNum = 0;//发送源通道编号，MP系列以外的设备均为00
+        public ushort dateTotalLength;//218报头和后续数据的字节总长
 
         abstract public byte[] GetBytes();
     }
 
     class RequestCMDRead : RequestCmd
     {
-        public UInt16 startAddress;//起始地址
-        public UInt16 reqNum;//读取的数量
-        public RequestCMDRead(byte slaveNum, CmdCode cmdCode, ushort startAddress, ushort reqNum)
+        public UInt16 length = 0x0C;//后续命令长度
+        public MFC mfc;//主功能码
+        public SFC sfc;//子功能码
+        public byte cpuNum;//CPU编号
+        public DateType dateType;//寄存器种类
+        public uint startAddress;//起始地址
+        public UInt16 reqNum;//读取数量
+
+        /// <summary>
+        /// 创建读取多个16位变量的报文
+        /// </summary>
+        /// <param name="mfc">主功能码</param>
+        /// <param name="sfc">子功能码</param>
+        /// <param name="cpuNum">本CPU编号</param>
+        /// <param name="dateType">寄存器类型</param>
+        /// <param name="startAddress">起始地址</param>
+        /// <param name="reqNum">读取数量</param>
+        public RequestCMDRead(MFC mfc, SFC sfc,byte cpuNum, DateType dateType, uint startAddress, ushort reqNum)
         {
-            this.sessionNum = MemobusTool.GetSessionNum();
-            this.tag = 0;
-            this.length = 6;
-            this.slaveNum = slaveNum;
-            this.cmdCode = cmdCode;
+            sessionNum = MemobusTool.GetSessionNum();
+            dateTotalLength = 26;
+
+            this.mfc = mfc;
+            this.sfc = sfc;
+            this.cpuNum = cpuNum;
+            this.dateType = dateType;
             this.startAddress = startAddress;
             this.reqNum = reqNum;
         }
 
         override public byte[] GetBytes()
         {
-            byte[] bytes = new byte[this.length + 6];
-            bytes[0] = (byte)(sessionNum >> 8);
-            bytes[1] = (byte)(sessionNum & 0x00ff);
-            bytes[2] = (byte)(tag >> 8);
-            bytes[3] = (byte)(tag & 0x00ff);
-            bytes[4] = (byte)(length >> 8);
-            bytes[5] = (byte)(length & 0x00ff);
-            bytes[6] = slaveNum;
-            bytes[7] = (byte)cmdCode;
-            bytes[8] = (byte)(startAddress >> 8);
-            bytes[9] = (byte)(startAddress & 0x00ff);
-            bytes[10] = (byte)(reqNum >> 8);
-            bytes[11] = (byte)(reqNum & 0x00ff);
-            return bytes;
-        }
-    }
+            byte[] bytes = new byte[this.dateTotalLength];
+            //组成218报文头
+            bytes[0] = cmdType;
+            bytes[1] = sessionNum;
+            bytes[2] = tragetChannelNum;
+            bytes[3] = sourceChannelNum;
+            bytes[4] = 0;
+            bytes[5] = 0;
+            bytes[6] = (byte)(dateTotalLength & 0x00ff);
+            bytes[7] = (byte)(dateTotalLength >> 8);
+            bytes[8] = 0;
+            bytes[9] = 0;
+            bytes[10] = 0;
+            bytes[11] = 0;
 
-    class RequestCMDWriteSingle : RequestCmd
-    {
-        public UInt16 startAddress;//操作的目标地址
-        public UInt16 value;//写入的值
+            //组成Memobus报文数据部分
+            bytes[12] = (byte)(length & 0x00ff);
+            bytes[13] = (byte)(length >> 8);
+            bytes[14] = (byte)mfc;
+            bytes[15] = (byte)sfc;
+            bytes[16] = cpuNum;
+            bytes[17] = 0;
+            bytes[18] = (byte)dateType;
+            bytes[19] = 0;
+            bytes[20] = (byte)(startAddress & 0x000000ff);
+            bytes[21] = (byte)(startAddress & 0x0000ff00);
+            bytes[22] = (byte)(startAddress & 0x00ff0000);
+            bytes[23] = (byte)(startAddress & 0xff000000);
+            bytes[24] = (byte)(reqNum & 0x00ff);
+            bytes[25] = (byte)(reqNum >> 8);
 
-        public RequestCMDWriteSingle(byte slaveNum, CmdCode cmdCode, ushort startAddress, ushort value)
-        {
-            this.sessionNum = MemobusTool.GetSessionNum();
-            this.tag = 0;
-            this.length = 6;
-            this.slaveNum = slaveNum;
-            this.cmdCode = cmdCode;
-            this.startAddress = startAddress;
-            this.value = value;
-        }
-
-        override public byte[] GetBytes()
-        {
-            byte[] bytes = new byte[this.length + 6];
-            bytes[0] = (byte)(sessionNum >> 8);
-            bytes[1] = (byte)(sessionNum & 0x00ff);
-            bytes[2] = (byte)(tag >> 8);
-            bytes[3] = (byte)(tag & 0x00ff);
-            bytes[4] = (byte)(length >> 8);
-            bytes[5] = (byte)(length & 0x00ff);
-            bytes[6] = slaveNum;
-            bytes[7] = (byte)cmdCode;
-            bytes[8] = (byte)(startAddress >> 8);
-            bytes[9] = (byte)(startAddress & 0x00ff);
-            bytes[10] = (byte)(value >> 8);
-            bytes[11] = (byte)(value & 0x00ff);
             return bytes;
         }
     }
 
     class RequestCMDWriteMore : RequestCmd
     {
-        public UInt16 startAddress;//起始地址
-        public UInt16 reqNum;//写入的数量
-        public byte byteNum;//字节数量
+        public UInt16 length;//后续命令长度
+        public MFC mfc;//主功能码
+        public SFC sfc;//子功能码
+        public byte cpuNum;//CPU编号
+        public DateType dateType;//寄存器种类
+        public uint startAddress;//起始地址
+        public UInt16 reqNum;//读取数量
         public byte[] data;//要写入的内容
 
-        public RequestCMDWriteMore(byte slaveNum, CmdCode cmdCode, ushort startAddress, ushort reqNum, byte[] bytes)
+        public RequestCMDWriteMore(MFC mfc, SFC sfc, byte cpuNum, DateType dateType, uint startAddress, ushort reqNum, byte[] bytes)
         {
-            this.sessionNum = MemobusTool.GetSessionNum();
-            this.tag = 0;
-            this.length = (ushort)(bytes.Length + 7);
-            this.slaveNum = slaveNum;
-            this.cmdCode = cmdCode;
+            sessionNum = MemobusTool.GetSessionNum();
+            dateTotalLength = (ushort)(26 + bytes.Length);
+
+            length = (UInt16)(12 + bytes.Length);
+            this.mfc = mfc;
+            this.sfc = sfc;
+            this.cpuNum = cpuNum;
+            this.dateType = dateType;
             this.startAddress = startAddress;
             this.reqNum = reqNum;
-            this.byteNum = (byte)bytes.Length;
             this.data = bytes;
         }
 
         override public byte[] GetBytes()
         {
-            byte[] bytes = new byte[this.length + 6];
-            bytes[0] = (byte)(sessionNum >> 8);
-            bytes[1] = (byte)(sessionNum & 0x00ff);
-            bytes[2] = (byte)(tag >> 8);
-            bytes[3] = (byte)(tag & 0x00ff);
-            bytes[4] = (byte)(length >> 8);
-            bytes[5] = (byte)(length & 0x00ff);
-            bytes[6] = slaveNum;
-            bytes[7] = (byte)cmdCode;
-            bytes[8] = (byte)(startAddress >> 8);
-            bytes[9] = (byte)(startAddress & 0x00ff);
-            bytes[10] = (byte)(reqNum >> 8);
-            bytes[11] = (byte)(reqNum & 0x00ff);
-            bytes[12] = byteNum;
+            byte[] bytes = new byte[this.dateTotalLength];
+            //组成218报文头
+            bytes[0] = cmdType;
+            bytes[1] = sessionNum;
+            bytes[2] = tragetChannelNum;
+            bytes[3] = sourceChannelNum;
+            bytes[4] = 0;
+            bytes[5] = 0;
+            bytes[6] = (byte)(dateTotalLength & 0x00ff);
+            bytes[7] = (byte)(dateTotalLength >> 8);
+            bytes[8] = 0;
+            bytes[9] = 0;
+            bytes[10] = 0;
+            bytes[11] = 0;
+
+            //组成Memobus报文数据部分
+            bytes[12] = (byte)(length & 0x00ff);
+            bytes[13] = (byte)(length >> 8);
+            bytes[14] = (byte)mfc;
+            bytes[15] = (byte)sfc;
+            bytes[16] = cpuNum;
+            bytes[17] = 0;
+            bytes[18] = (byte)dateType;
+            bytes[19] = 0;
+            bytes[20] = (byte)(startAddress & 0x000000ff);
+            bytes[21] = (byte)(startAddress & 0x0000ff00);
+            bytes[22] = (byte)(startAddress & 0x00ff0000);
+            bytes[23] = (byte)(startAddress & 0xff000000);
+            bytes[24] = (byte)(reqNum & 0x00ff);
+            bytes[25] = (byte)(reqNum >> 8);
 
             for (int i = 0; i < data.Length; i++)
             {
-                bytes[i + 13] = data[i];
+                bytes[26 + i] = data[i];
             }
 
             return bytes;
@@ -1248,8 +1232,8 @@ namespace MemoBusTool
         public UInt16 recSessionNum;
         public UInt16 tag;
         public UInt16 length;
-        public byte slaveNum;
-        public CmdCode cmdCode;
+        public byte cpuNum;
+        public SFC cmdCode;
         public byte[] data;
 
         public Respones(byte[] bytes)
@@ -1260,8 +1244,8 @@ namespace MemoBusTool
             this.tag = (UInt16)(this.tag | bytes[3]);
             this.length = (UInt16)(bytes[4] << 8);
             this.length = (UInt16)(this.length | bytes[5]);
-            this.slaveNum = bytes[6];
-            this.cmdCode = (CmdCode)bytes[7];
+            this.cpuNum = bytes[6];
+            this.cmdCode = (SFC)bytes[7];
             data = new byte[bytes.Length];
             Array.ConstrainedCopy(bytes, 0, data, 0, bytes.Length);
         }
