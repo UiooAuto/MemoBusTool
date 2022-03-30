@@ -1153,6 +1153,16 @@ namespace MemoBusTool
         public UInt16 reqNum;//读取数量
         public byte[] data;//要写入的内容
 
+        /// <summary>
+        /// 创建用于写入多个16位数据的命令
+        /// </summary>
+        /// <param name="mfc">主功能码</param>
+        /// <param name="sfc">子功能码</param>
+        /// <param name="cpuNum">本CPU编号</param>
+        /// <param name="dateType">寄存器类型</param>
+        /// <param name="startAddress">起始地址</param>
+        /// <param name="reqNum">读取数量</param>
+        /// <param name="bytes">要写入的字节数组</param>
         public RequestCMDWriteMore(MFC mfc, SFC sfc, byte cpuNum, DateType dateType, uint startAddress, ushort reqNum, byte[] bytes)
         {
             sessionNum = MemobusTool.GetSessionNum();
@@ -1229,23 +1239,20 @@ namespace MemoBusTool
 
     class Respones
     {
-        public UInt16 recSessionNum;
-        public UInt16 tag;
-        public UInt16 length;
-        public byte cpuNum;
-        public SFC cmdCode;
+        public byte sessionNum;//会话识别号(序列号),每次自增
+        public ushort dateTotalLength;//218报头和后续数据的字节总长
+        public UInt16 length;//响应内容部分的长度
+        public byte sfc;//接收到的子功能码
         public byte[] data;
 
         public Respones(byte[] bytes)
         {
-            this.recSessionNum = (UInt16)(bytes[0] << 8);
-            this.recSessionNum = (UInt16)(this.recSessionNum | bytes[1]);
-            this.tag = (UInt16)(bytes[2] << 8);
-            this.tag = (UInt16)(this.tag | bytes[3]);
-            this.length = (UInt16)(bytes[4] << 8);
-            this.length = (UInt16)(this.length | bytes[5]);
-            this.cpuNum = bytes[6];
-            this.cmdCode = (SFC)bytes[7];
+            this.sessionNum = bytes[1];
+            this.dateTotalLength = (UInt16)(bytes[7] << 8);
+            this.dateTotalLength = (UInt16)(this.dateTotalLength | bytes[6]);
+            this.length = (UInt16)(bytes[13] << 8);
+            this.length = (UInt16)(this.length | bytes[12]);
+            this.sfc = bytes[15];
             data = new byte[bytes.Length];
             Array.ConstrainedCopy(bytes, 0, data, 0, bytes.Length);
         }
