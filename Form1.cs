@@ -66,7 +66,7 @@ namespace MemoBusTool
 
                 if (cb_IsNotUWord.Checked)
                 {
-                    ReadResult<Int16[]> readResult = plc.Read16(tb_ReadWordAddress.Text, (UInt16)num);
+                    ReadResult<Int16[]> readResult = plc.Read16(ReadAddressOffset(tb_ReadWordAddress.Text), (UInt16)num);
 
                     if (readResult.isSuccess)
                     {
@@ -95,7 +95,7 @@ namespace MemoBusTool
             {
                 if (cb_IsNotUWord.Checked)
                 {
-                    ReadResult<Int16> readResult = plc.Read16(tb_ReadWordAddress.Text);
+                    ReadResult<Int16> readResult = plc.Read16(ReadAddressOffset(tb_ReadWordAddress.Text));
                     if (readResult.isSuccess)
                     {
                         Show(readResult.result.ToString());
@@ -107,7 +107,7 @@ namespace MemoBusTool
                 }
                 else
                 {
-                    ReadResult<UInt16> readResult = plc.ReadU16(tb_ReadWordAddress.Text);
+                    ReadResult<UInt16> readResult = plc.ReadU16(ReadAddressOffset(tb_ReadWordAddress.Text));
                     if (readResult.isSuccess)
                     {
                         Show(readResult.result.ToString());
@@ -122,9 +122,10 @@ namespace MemoBusTool
 
         private void ReadThread1()
         {
+            string v = ReadAddressOffset(tb_ReadWordAddress.Text);
             while (true)
             {
-                ReadResult<Int16[]> readResult = plc.Read16(tb_ReadWordAddress.Text, (UInt16)int.Parse(tb_ReadWordLength.Text));
+                ReadResult<Int16[]> readResult = plc.Read16(v, (UInt16)int.Parse(tb_ReadWordLength.Text));
                 if (readResult.isSuccess)
                 {
                     Show(JsonConvert.SerializeObject(readResult.result));
@@ -139,7 +140,7 @@ namespace MemoBusTool
         {
             while (true)
             {
-                ReadResult<int[]> readResult = plc.Read32(tb_ReadDWordAddress.Text, (UInt16)int.Parse(tb_ReadDWordLength.Text));
+                ReadResult<int[]> readResult = plc.Read32(ReadAddressOffset(tb_ReadDWordAddress.Text), (UInt16)int.Parse(tb_ReadDWordLength.Text));
                 if (readResult.isSuccess)
                 {
                     Show(JsonConvert.SerializeObject(readResult.result));
@@ -248,7 +249,7 @@ namespace MemoBusTool
                 }
                 if (cb_IsNotUDWord.Checked)
                 {
-                    ReadResult<int[]> readResult = plc.Read32(tb_ReadDWordAddress.Text, (UInt16)num);
+                    ReadResult<int[]> readResult = plc.Read32(ReadAddressOffset(tb_ReadDWordAddress.Text), (UInt16)num);
                     if (readResult.isSuccess)
                     {
                         Show(JsonConvert.SerializeObject(readResult.result));
@@ -260,20 +261,35 @@ namespace MemoBusTool
                 }
                 else
                 {
-                    ReadResult<uint[]> readResult = plc.ReadU32(tb_ReadDWordAddress.Text, (UInt16)num);
-                    if (readResult.isSuccess)
+                    if (cb_IsNotUDWord.Checked)
                     {
-                        Show(JsonConvert.SerializeObject(readResult.result));
+                        ReadResult<int[]> readResult = plc.Read32(ReadAddressOffset(tb_ReadDWordAddress.Text), (UInt16)num);
+                        if (readResult.isSuccess)
+                        {
+                            Show(JsonConvert.SerializeObject(readResult.result));
+                        }
+                        else
+                        {
+                            Show("读取失败");
+                        }
                     }
                     else
                     {
-                        Show("读取失败");
+                        ReadResult<uint[]> readResult = plc.ReadU32(ReadAddressOffset(tb_ReadDWordAddress.Text), (UInt16)num);
+                        if (readResult.isSuccess)
+                        {
+                            Show(JsonConvert.SerializeObject(readResult.result));
+                        }
+                        else
+                        {
+                            Show("读取失败");
+                        }
                     }
                 }
             }
             else
             {
-                ReadResult<int> readResult = plc.Read32(tb_ReadDWordAddress.Text);
+                ReadResult<int> readResult = plc.Read32(ReadAddressOffset(tb_ReadDWordAddress.Text));
                 if (readResult.isSuccess)
                 {
                     Show(readResult.result.ToString());
@@ -376,6 +392,34 @@ namespace MemoBusTool
             if (readThread != null)
             {
                 readThread.Abort();
+            }
+        }
+
+        private string ReadAddressOffset(string inputAdrs)
+        {
+            if (inputAdrs.Contains("M") || inputAdrs.Contains("m") &&
+                int.Parse(inputAdrs.Substring(1)) >= int.Parse(tb_ReadOffset.Text))
+            {
+                int v1 = int.Parse(inputAdrs.Substring(1)) - int.Parse(tb_ReadOffset.Text);
+                return "m" + v1;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private string WriteAddressOffset(string inputAdrs)
+        {
+            if (inputAdrs.Contains("M") || inputAdrs.Contains("m") &&
+                int.Parse(inputAdrs.Substring(1)) >= int.Parse(tb_WriteOffset.Text))
+            {
+                int v1 = int.Parse(inputAdrs.Substring(1)) - int.Parse(tb_WriteOffset.Text);
+                return "m" + v1;
+            }
+            else
+            {
+                return null;
             }
         }
     }
