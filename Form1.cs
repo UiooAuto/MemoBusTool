@@ -50,35 +50,6 @@ namespace MemoBusTool
             }
         }
 
-        private void btn_ReadBool_Click(object sender, EventArgs e)
-        {
-            int num;
-            if (int.TryParse(tb_ReadBoolLength.Text, out num))
-            {
-                ReadResult<bool[]> readResult = plc.ReadBoolean(tb_ReadBoolAddress.Text, (UInt16)num);
-                if (readResult.isSuccess)
-                {
-                    Show(JsonConvert.SerializeObject(readResult.result));
-                }
-                else
-                {
-                    Show("读取失败");
-                }
-            }
-            else
-            {
-                ReadResult<bool> readResult = plc.ReadBoolean(tb_ReadBoolAddress.Text);
-                if (readResult.isSuccess)
-                {
-                    Show(readResult.result.ToString());
-                }
-                else
-                {
-                    Show("读取失败");
-                }
-            }
-        }
-
         private void btn_ReadWord_Click(object sender, EventArgs e)
         {
             int num;
@@ -179,43 +150,11 @@ namespace MemoBusTool
             }
         }
 
-        private void btn_WriteBool_Click(object sender, EventArgs e)
-        {
-            bool v;
-            if (tb_WriteBoolValue.Text.Contains('，'))
-            {
-                MessageBox.Show("请使用英文逗号分隔");
-                return;
-            }
-            if (tb_WriteBoolValue.Text.Contains(','))
-            {
-                string[] strings = tb_WriteBoolValue.Text.Split(',');
-                bool[] bools = new bool[strings.Length];
-                for (int i = 0; i < strings.Length; i++)
-                {
-                    bools[i] = StringToBool(strings[i]);
-                }
-                v = plc.Write(tb_WriteBoolAddress.Text, bools);
-            }
-            else
-            {
-                v = plc.Write(tb_WriteBoolAddress.Text, StringToBool(tb_WriteBoolValue.Text));
-            }
-            if (v)
-            {
-                Show("写入成功");
-            }
-            else
-            {
-                Show("写入失败");
-            }
-        }
-
         private void btn_WriteWord_Click(object sender, EventArgs e)
         {
             bool v;
 
-            if (tb_WriteBoolValue.Text.Contains('，'))
+            if (tb_WriteWordValue.Text.Contains('，'))
             {
                 MessageBox.Show("请使用英文逗号分隔");
                 return;
@@ -349,7 +288,7 @@ namespace MemoBusTool
         {
             bool v;
 
-            if (tb_WriteBoolValue.Text.Contains('，'))
+            if (tb_WriteDWordValue.Text.Contains('，'))
             {
                 MessageBox.Show("请使用英文逗号分隔");
                 return;
