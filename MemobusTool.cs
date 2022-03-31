@@ -254,9 +254,9 @@ namespace MemoBusTool
             {
                 return readResult;
             }
-            readResult.result = checkRes.Respones.data[9];
+            readResult.result = checkRes.Respones.data[23];
             readResult.result = (UInt16)(readResult.result << 8);
-            readResult.result = (UInt16)(readResult.result | checkRes.Respones.data[10]);
+            readResult.result = (UInt16)(readResult.result | checkRes.Respones.data[22]);
 
             return readResult;
         }
@@ -298,8 +298,9 @@ namespace MemoBusTool
                 return readResult;
             }
             byte[] resultByte = new byte[checkRes.Respones.data[8]];//如果查找成功，则新建结果数组
-            Array.ConstrainedCopy(checkRes.Respones.data, 9, resultByte, 0, checkRes.Respones.data[8]);//从结果报文中获取结果内容
-            readResult.result = BytesToUInt16(resultByte);
+            ushort v1 = BytesToUInt16(checkRes.Respones.data[21], checkRes.Respones.data[20]);
+            Array.ConstrainedCopy(checkRes.Respones.data, 22, resultByte, 0, (v1*2));//从结果报文中获取结果内容
+            readResult.result = BytesToUInt16s(resultByte);
 
             return readResult;
         }
@@ -348,10 +349,7 @@ namespace MemoBusTool
             {
                 return readResult;
             }
-            UInt16 tempValue = 0;
-            tempValue = checkRes.Respones.data[9];
-            tempValue = (UInt16)(tempValue << 8);
-            tempValue = (UInt16)(tempValue | (UInt16)checkRes.Respones.data[10]);
+            UInt16 tempValue = BytesToUInt16(checkRes.Respones.data[23], checkRes.Respones.data[22]);
 
             readResult.result = (Int16)tempValue;
 
@@ -399,9 +397,10 @@ namespace MemoBusTool
             {
                 return readResult;
             }
-            byte[] resultByte = new byte[checkRes.Respones.data[8]];//如果查找成功，则新建结果数组
-            Array.ConstrainedCopy(checkRes.Respones.data, 9, resultByte, 0, checkRes.Respones.data[8]);//从结果报文中获取结果内容
-            UInt16[] tempArr = BytesToUInt16(resultByte);
+            ushort v1 = BytesToUInt16(checkRes.Respones.data[21], checkRes.Respones.data[20]);//读取到的总数
+            byte[] resultByte = new byte[v1 * 2];//如果查找成功，则新建结果数组
+            Array.ConstrainedCopy(checkRes.Respones.data, 22, resultByte, 0, (v1 * 2));//从结果报文中获取结果内容
+            UInt16[] tempArr = BytesToUInt16s(resultByte);
             readResult.result = new Int16[tempArr.Length];
 
             for (int i = 0; i < tempArr.Length; i++)
@@ -549,7 +548,21 @@ namespace MemoBusTool
             {
                 return false;
             }
-            return ByteArrayEquals(cmd.GetBytes(), checkRes.Respones.data);
+            byte[] cmdBytes = cmd.GetBytes();
+            //比较写入的起始地址和数量是否一致
+            if (cmdBytes[20] == checkRes.Respones.data[20] &&
+                cmdBytes[21] == checkRes.Respones.data[21] &&
+                cmdBytes[22] == checkRes.Respones.data[22] &&
+                cmdBytes[23] == checkRes.Respones.data[23] &&
+                cmdBytes[24] == checkRes.Respones.data[24] &&
+                cmdBytes[25] == checkRes.Respones.data[25])
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public bool Write(string startAddress, Int16 value)
@@ -579,7 +592,21 @@ namespace MemoBusTool
             {
                 return false;
             }
-            return ByteArrayEquals(cmd.GetBytes(), checkRes.Respones.data);
+            byte[] cmdBytes = cmd.GetBytes();
+            //比较写入的起始地址和数量是否一致
+            if (cmdBytes[20] == checkRes.Respones.data[20] &&
+                cmdBytes[21] == checkRes.Respones.data[21] &&
+                cmdBytes[22] == checkRes.Respones.data[22] &&
+                cmdBytes[23] == checkRes.Respones.data[23] &&
+                cmdBytes[24] == checkRes.Respones.data[24] &&
+                cmdBytes[25] == checkRes.Respones.data[25])
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public bool Write(string startAddress, uint value)
@@ -634,12 +661,23 @@ namespace MemoBusTool
             {
                 return false;
             }
+            byte[] cmdBytes = cmd.GetBytes();
 
-            byte[] vs1 = MakeTargetRespones(cmd.GetBytes());
-            vs1[4] = 0;
-            vs1[5] = 6;
+            //比较写入的起始地址和数量是否一致
+            if (cmdBytes[20] == checkRes.Respones.data[20] &&
+                cmdBytes[21] == checkRes.Respones.data[21] &&
+                cmdBytes[22] == checkRes.Respones.data[22] &&
+                cmdBytes[23] == checkRes.Respones.data[23] &&
+                cmdBytes[24] == checkRes.Respones.data[24] &&
+                cmdBytes[25] == checkRes.Respones.data[25])
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
 
-            return ByteArrayEquals(vs1, checkRes.Respones.data);
         }
 
         public bool Write(string startAddress, Int16[] value)
@@ -670,11 +708,21 @@ namespace MemoBusTool
                 return false;
             }
 
-            byte[] vs1 = MakeTargetRespones(cmd.GetBytes());
-            vs1[4] = 0;
-            vs1[5] = 6;
-
-            return ByteArrayEquals(vs1, checkRes.Respones.data);
+            byte[] cmdBytes = cmd.GetBytes();
+            //比较写入的起始地址和数量是否一致
+            if (cmdBytes[20] == checkRes.Respones.data[20] &&
+                cmdBytes[21] == checkRes.Respones.data[21] &&
+                cmdBytes[22] == checkRes.Respones.data[22] &&
+                cmdBytes[23] == checkRes.Respones.data[23] &&
+                cmdBytes[24] == checkRes.Respones.data[24] &&
+                cmdBytes[25] == checkRes.Respones.data[25])
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public bool Write(string startAddress, uint[] value)
@@ -712,6 +760,7 @@ namespace MemoBusTool
 
         #endregion
 
+        #region 工具函数(byte转short、int等)
         public bool ByteArrayEquals(byte[] b1, byte[] b2)
         {
             if (b1.Length == b2.Length)
@@ -790,14 +839,34 @@ namespace MemoBusTool
             return result;
         }
 
-        public UInt16[] BytesToUInt16(byte[] bytes)
+        public UInt16 BytesToUInt16(byte high, byte low)
+        {
+            UInt16 result;
+            result = high;
+            result = (UInt16)(result << 8);
+            result = (UInt16)(result | low);
+
+            return result;
+        }
+
+        public UInt16 BytesToUInt16(byte[] bytes)
+        {
+            UInt16 result;
+            result = bytes[1];
+            result = (UInt16)(result << 8);
+            result = (UInt16)(result | bytes[0]);
+
+            return result;
+        }
+
+        public UInt16[] BytesToUInt16s(byte[] bytes)
         {
             UInt16[] ints = new UInt16[bytes.Length / 2];
             for (int i = 0; i < ints.Length; i++)
             {
-                ints[i] = bytes[i * 2];
+                ints[i] = bytes[(i * 2) + 1];
                 ints[i] = (UInt16)(ints[i] << 8);
-                ints[i] = (UInt16)(ints[i] | bytes[(i * 2) + 1]);
+                ints[i] = (UInt16)(ints[i] | bytes[i * 2]);
             }
             return ints;
         }
@@ -810,10 +879,10 @@ namespace MemoBusTool
         public byte[] Uint16ToBytes(UInt16 value)
         {
             byte[] bytes = new byte[2];
-            
+
             bytes[0] = (byte)(value & 0x00ff);
             bytes[1] = (byte)(value >> 8);
-            
+
             return bytes;
         }
 
@@ -832,7 +901,7 @@ namespace MemoBusTool
         {
             byte[] bytes = new byte[2];
             bytes[0] = (byte)(value & 0x00ff);
-            bytes[1] = (byte)(value >> 8);            
+            bytes[1] = (byte)(value >> 8);
             return bytes;
         }
 
@@ -850,14 +919,21 @@ namespace MemoBusTool
         public byte[] MakeTargetRespones(byte[] value)
         {
             byte[] result = new byte[12];
-            for (int i = 0; i < result.Length; i++)
-            {
-                result[i] = value[i];
-            }
+            Array.Copy(value, 14, result, 0, 12);
             return result;
         }
+
+        #endregion
+
     }
 
+    #region 结果类、参数枚举等
+
+    /// <summary>
+    /// 读取到的结果
+    /// </summary>
+    /// <typeparam name="isSuccess">结果是否成功</typeparam>
+    /// <typeparam name="T">读取到的结果内容</typeparam>
     public class ReadResult<T>
     {
         public bool isSuccess;
@@ -869,6 +945,8 @@ namespace MemoBusTool
             this.result = default(T);
         }
     }
+
+    #region 参数枚举
 
     /// <summary>
     /// 主功能码
@@ -948,6 +1026,10 @@ namespace MemoBusTool
         DWord = 3,
     }
 
+    #endregion
+
+    #region 请求报文
+
     public abstract class RequestCmd
     {
         //218报文头关键值
@@ -979,7 +1061,7 @@ namespace MemoBusTool
         /// <param name="dateType">寄存器类型</param>
         /// <param name="startAddress">起始地址</param>
         /// <param name="reqNum">读取数量</param>
-        public RequestCMDRead(MFC mfc, SFC sfc,byte cpuNum, DateType dateType, uint startAddress, ushort reqNum)
+        public RequestCMDRead(MFC mfc, SFC sfc, byte cpuNum, DateType dateType, uint startAddress, ushort reqNum)
         {
             sessionNum = MemobusTool.GetSessionNum();
             dateTotalLength = 26;
@@ -1107,6 +1189,10 @@ namespace MemoBusTool
         }
     }
 
+    #endregion
+
+    #region 响应报文
+
     class CheckRes
     {
         private UInt16 reuqestSessionNum;
@@ -1144,4 +1230,9 @@ namespace MemoBusTool
             Array.ConstrainedCopy(bytes, 0, data, 0, bytes.Length);
         }
     }
+
+    #endregion
+
+    #endregion
+
 }
