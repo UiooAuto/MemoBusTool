@@ -18,6 +18,7 @@ namespace MemoBusTool
         public Form1()
         {
             InitializeComponent();
+            this.Text = "MemobusTool v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             CheckForIllegalCrossThreadCalls = false;
         }
 
