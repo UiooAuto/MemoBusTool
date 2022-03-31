@@ -144,6 +144,10 @@ namespace MemoBusTool
 
         #endregion
 
+        /// <summary>
+        /// 获取会话编号
+        /// </summary>
+        /// <returns>返回本次交互所需的会话编号</returns>
         public static byte GetSessionNum()
         {
             return ComSessionNum++;
@@ -155,9 +159,7 @@ namespace MemoBusTool
             int v;
             try
             {
-                byte[] vs = cmd.GetBytes();
-                v = socket.Send(vs);
-                //v = socket.Send(cmd.GetBytes());
+                v = socket.Send(cmd.GetBytes());
             }
             catch
             {
@@ -287,6 +289,13 @@ namespace MemoBusTool
         public ReadResult<UInt16[]> ReadU16(string startAddress, ushort reqNum)
         {
             ReadResult<UInt16[]> readResult = new ReadResult<UInt16[]>();//预备结果
+
+            //读取超出范围
+            if (reqNum > 2044)
+            {
+                readResult.errorCode = 0x50;
+                return readResult;
+            }
             SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("M") || startAddress.Contains("m"))
@@ -398,6 +407,12 @@ namespace MemoBusTool
         public ReadResult<Int16[]> Read16(string startAddress, ushort reqNum)
         {
             ReadResult<Int16[]> readResult = new ReadResult<Int16[]>();//预备结果
+            //读取超出范围
+            if (reqNum > 2044)
+            {
+                readResult.errorCode = 0x50;
+                return readResult;
+            }
             SFC cmdCode;
             ushort address = 0;
             if (startAddress.Contains("M") || startAddress.Contains("m"))
@@ -485,6 +500,12 @@ namespace MemoBusTool
         public ReadResult<uint[]> ReadU32(string startAddress, ushort reqNum)
         {
             ReadResult<uint[]> readResult = new ReadResult<uint[]>();//预备结果
+            //读取超出范围
+            if (reqNum > 1022)
+            {
+                readResult.errorCode = 0x50;
+                return readResult;
+            }
             readResult.result = new uint[reqNum];
 
             ReadResult<ushort[]> readResultUint16 = ReadU16(startAddress, (UInt16)(2 * reqNum));
@@ -536,6 +557,12 @@ namespace MemoBusTool
         public ReadResult<int[]> Read32(string startAddress, ushort reqNum)
         {
             ReadResult<int[]> readResult = new ReadResult<int[]>();//预备结果
+            //读取超出范围
+            if (reqNum > 1022)
+            {
+                readResult.errorCode = 0x50;
+                return readResult;
+            }
             readResult.result = new int[reqNum];
 
             ReadResult<ushort[]> readResultUint16 = ReadU16(startAddress, (UInt16)(2 * reqNum));
@@ -689,10 +716,22 @@ namespace MemoBusTool
 
         #region 多个写入
 
+        /// <summary>
+        /// 写入多个16位无符号变量，最大数量不可以超过2043个
+        /// </summary>
+        /// <param name="startAddress">起始地址</param>
+        /// <param name="value">要写入的数据</param>
+        /// <returns>写入是否成功</returns>
         public bool Write(string startAddress, UInt16[] value)
         {
             SFC cmdCode;
             ushort address = 0;
+            //检查写入是否超长
+            if (value.Length > 2043)
+            {
+                return false;
+            }
+
             if (startAddress.Contains("M") || startAddress.Contains("m"))
             {
                 cmdCode = SFC.Write16More;
@@ -742,10 +781,21 @@ namespace MemoBusTool
 
         }
 
+        /// <summary>
+        /// 写入多个16位有符号变量，最大数量不可以超过2043个
+        /// </summary>
+        /// <param name="startAddress">起始地址</param>
+        /// <param name="value">要写入的数据</param>
+        /// <returns>写入是否成功</returns>
         public bool Write(string startAddress, Int16[] value)
         {
             SFC cmdCode;
             ushort address = 0;
+            //检查写入是否超长
+            if (value.Length > 2043)
+            {
+                return false;
+            }
             if (startAddress.Contains("M") || startAddress.Contains("m"))
             {
                 cmdCode = SFC.Write16More;
@@ -795,8 +845,19 @@ namespace MemoBusTool
             }
         }
 
+        /// <summary>
+        /// 写入多个32位无符号变量，最大数量不可以超过1021个
+        /// </summary>
+        /// <param name="startAddress">起始地址</param>
+        /// <param name="value">要写入的数据</param>
+        /// <returns>写入是否成功</returns>
         public bool Write(string startAddress, uint[] value)
         {
+            //检查写入是否超长
+            if (value.Length > 1021)
+            {
+                return false;
+            }
             UInt16[] tempArr = new ushort[value.Length * 2];
 
             for (int i = 0; i < value.Length; i++)
@@ -810,8 +871,19 @@ namespace MemoBusTool
             return v;
         }
 
+        /// <summary>
+        /// 写入多个32位有符号变量，最大数量不可以超过1021个
+        /// </summary>
+        /// <param name="startAddress">起始地址</param>
+        /// <param name="value">要写入的数据</param>
+        /// <returns>写入是否成功</returns>
         public bool Write(string startAddress, int[] value)
         {
+            //检查写入是否超长
+            if (value.Length > 1021)
+            {
+                return false;
+            }
             UInt16[] tempArr = new UInt16[value.Length * 2];
 
             for (int i = 0; i < value.Length; i++)

@@ -333,7 +333,7 @@
             this.Controls.Add(this.connect);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "MemobusTool v1.0.0";
+            this.Text = "MemobusTool v1.0.1";
             this.ResumeLayout(false);
             this.PerformLayout();
 
