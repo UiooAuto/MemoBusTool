@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.btn_StopThreadRead = new System.Windows.Forms.Button();
             this.cb_ThreadReadOpen = new System.Windows.Forms.CheckBox();
             this.label7 = new System.Windows.Forms.Label();
@@ -330,8 +331,9 @@
             this.Controls.Add(this.tb_port);
             this.Controls.Add(this.tb_ip);
             this.Controls.Add(this.connect);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "MemobusTool v1.0.0";
             this.ResumeLayout(false);
             this.PerformLayout();
 
