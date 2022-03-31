@@ -203,11 +203,19 @@ namespace MemoBusTool
             CheckRes checkRes = (CheckRes)o;
             while (true)
             {
+                //防止有空值
                 if (recData != null && checkRes != null)
                 {
-                    Respones respones = new Respones(recData);
+                    //创建返回结果
+                    Respones respones = new Respones(recData);          
+                    //判断会话号相同
                     if (checkRes.ReuqestSessionNum == respones.recSessionNum)
                     {
+                        //防止操作报错
+                        if (checkRes.Sfc != respones.sfc)
+                        {
+                            respones.errorCode = respones.data[17];
+                        }
                         checkRes.Respones = respones;
                         checkRes.FindSuccess = true;
                         return;
@@ -249,11 +257,19 @@ namespace MemoBusTool
             checkThread.Join(overTime);//利用检查线程阻塞本线程，超时时间由程序指定
             checkThread.Abort();
 
-            readResult.isSuccess = checkRes.FindSuccess;
+            //检查是否找到响应
             if (!checkRes.FindSuccess)
             {
                 return readResult;
             }
+            //检查响应中是否包含错误代码
+            if (checkRes.Respones.errorCode != 0)
+            {
+                readResult.errorCode = checkRes.Respones.errorCode;
+                readResult.isSuccess = false;
+                return readResult;
+            }
+            readResult.isSuccess = true;
             readResult.result = checkRes.Respones.data[23];
             readResult.result = (UInt16)(readResult.result << 8);
             readResult.result = (UInt16)(readResult.result | checkRes.Respones.data[22]);
@@ -292,11 +308,19 @@ namespace MemoBusTool
             checkThread.Join(overTime);//利用检查线程阻塞本线程，超时时间由程序指定
             checkThread.Abort();
 
-            readResult.isSuccess = checkRes.FindSuccess;//结果查找成功
-            if (!checkRes.FindSuccess)//如果查找不成功则直接返回失败结果
+            //检查是否找到响应
+            if (!checkRes.FindSuccess)
             {
                 return readResult;
             }
+            //检查响应中是否包含错误代码
+            if (checkRes.Respones.errorCode != 0)
+            {
+                readResult.errorCode = checkRes.Respones.errorCode;
+                readResult.isSuccess = false;
+                return readResult;
+            }
+            readResult.isSuccess = true;
             byte[] resultByte = new byte[checkRes.Respones.data[8]];//如果查找成功，则新建结果数组
             ushort v1 = BytesToUInt16(checkRes.Respones.data[21], checkRes.Respones.data[20]);
             Array.ConstrainedCopy(checkRes.Respones.data, 22, resultByte, 0, (v1*2));//从结果报文中获取结果内容
@@ -344,11 +368,19 @@ namespace MemoBusTool
             checkThread.Join(overTime);//利用检查线程阻塞本线程，超时时间由程序指定
             checkThread.Abort();
 
-            readResult.isSuccess = checkRes.FindSuccess;
+            //检查是否找到响应
             if (!checkRes.FindSuccess)
             {
                 return readResult;
             }
+            //检查响应中是否包含错误代码
+            if (checkRes.Respones.errorCode != 0)
+            {
+                readResult.errorCode = checkRes.Respones.errorCode;
+                readResult.isSuccess = false;
+                return readResult;
+            }
+            readResult.isSuccess = true;
             UInt16 tempValue = BytesToUInt16(checkRes.Respones.data[23], checkRes.Respones.data[22]);
 
             readResult.result = (Int16)tempValue;
@@ -392,11 +424,19 @@ namespace MemoBusTool
             checkThread.Join(overTime);//利用检查线程阻塞本线程，超时时间由程序指定
             checkThread.Abort();
 
-            readResult.isSuccess = checkRes.FindSuccess;//结果查找成功
-            if (!checkRes.FindSuccess)//如果查找不成功则直接返回失败结果
+            //检查是否找到响应
+            if (!checkRes.FindSuccess)
             {
                 return readResult;
             }
+            //检查响应中是否包含错误代码
+            if (checkRes.Respones.errorCode != 0)
+            {
+                readResult.errorCode = checkRes.Respones.errorCode;
+                readResult.isSuccess = false;
+                return readResult;
+            }
+            readResult.isSuccess = true;
             ushort v1 = BytesToUInt16(checkRes.Respones.data[21], checkRes.Respones.data[20]);//读取到的总数
             byte[] resultByte = new byte[v1 * 2];//如果查找成功，则新建结果数组
             Array.ConstrainedCopy(checkRes.Respones.data, 22, resultByte, 0, (v1 * 2));//从结果报文中获取结果内容
@@ -544,10 +584,18 @@ namespace MemoBusTool
             checkThread.Join(overTime);//利用检查线程阻塞本线程，超时时间由程序指定
             checkThread.Abort();
 
+            //检查是否找到响应
             if (!checkRes.FindSuccess)
             {
                 return false;
             }
+            
+            //检查响应中是否包含错误代码
+            if (checkRes.Respones.errorCode != 0)
+            {
+                return false;
+            }
+
             byte[] cmdBytes = cmd.GetBytes();
             //比较写入的起始地址和数量是否一致
             if (cmdBytes[20] == checkRes.Respones.data[20] &&
@@ -588,7 +636,14 @@ namespace MemoBusTool
             checkThread.Join(overTime);//利用检查线程阻塞本线程，超时时间由程序指定
             checkThread.Abort();
 
+            //检查是否找到响应
             if (!checkRes.FindSuccess)
+            {
+                return false;
+            }
+
+            //检查响应中是否包含错误代码
+            if (checkRes.Respones.errorCode != 0)
             {
                 return false;
             }
@@ -657,7 +712,14 @@ namespace MemoBusTool
             checkThread.Join(overTime);//利用检查线程阻塞本线程，超时时间由程序指定
             checkThread.Abort();
 
+            //检查是否找到响应
             if (!checkRes.FindSuccess)
+            {
+                return false;
+            }
+
+            //检查响应中是否包含错误代码
+            if (checkRes.Respones.errorCode != 0)
             {
                 return false;
             }
@@ -703,7 +765,15 @@ namespace MemoBusTool
             checkThread.Join(overTime);//利用检查线程阻塞本线程，超时时间由程序指定
             checkThread.Abort();
 
+
+            //检查是否找到响应
             if (!checkRes.FindSuccess)
+            {
+                return false;
+            }
+
+            //检查响应中是否包含错误代码
+            if (checkRes.Respones.errorCode != 0)
             {
                 return false;
             }
@@ -929,6 +999,8 @@ namespace MemoBusTool
 
     #region 结果类、参数枚举等
 
+    #region 结果类
+
     /// <summary>
     /// 读取到的结果
     /// </summary>
@@ -937,6 +1009,7 @@ namespace MemoBusTool
     public class ReadResult<T>
     {
         public bool isSuccess;
+        public byte errorCode;
         public T result;
 
         public ReadResult()
@@ -945,6 +1018,8 @@ namespace MemoBusTool
             this.result = default(T);
         }
     }
+
+    #endregion
 
     #region 参数枚举
 
@@ -1196,6 +1271,7 @@ namespace MemoBusTool
     class CheckRes
     {
         private UInt16 reuqestSessionNum;
+        private byte sfc;
         private bool findSuccess = false;
 
         private Respones respones;
@@ -1207,6 +1283,7 @@ namespace MemoBusTool
 
         public ushort ReuqestSessionNum { get => reuqestSessionNum; set => reuqestSessionNum = value; }
         public bool FindSuccess { get => findSuccess; set => findSuccess = value; }
+        internal byte Sfc { get => sfc; set => sfc = value; }
         internal Respones Respones { get => respones; set => respones = value; }
     }
 
@@ -1217,6 +1294,8 @@ namespace MemoBusTool
         public UInt16 length;//响应内容部分的长度
         public byte sfc;//接收到的子功能码
         public byte[] data;
+
+        public byte errorCode = 0;
 
         public Respones(byte[] bytes)
         {
