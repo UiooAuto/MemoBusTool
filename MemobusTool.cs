@@ -1180,7 +1180,7 @@ namespace MemoBusTool
     public abstract class RequestCmd
     {
         //218报文头关键值
-        public byte cmdType = 11;//Memobus指令为11，响应为19，通用信息12
+        public byte cmdType = 0x11;//Memobus指令为11，响应为19，通用信息12
         public byte sessionNum;//会话识别号(序列号),每次自增
         public byte tragetChannelNum = 0;//目标通道编号，MP系列以外的设备均为00
         public byte sourceChannelNum = 0;//发送源通道编号，MP系列以外的设备均为00

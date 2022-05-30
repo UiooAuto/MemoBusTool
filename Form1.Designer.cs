@@ -23,8 +23,8 @@
         #region Windows 窗体设计器生成的代码
 
         /// <summary>
-        /// 设计器支持所需的方法 - 不要修改
-        /// 使用代码编辑器修改此方法的内容。
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent()
         {
@@ -283,7 +283,7 @@
             this.tb_port.Name = "tb_port";
             this.tb_port.Size = new System.Drawing.Size(100, 21);
             this.tb_port.TabIndex = 44;
-            this.tb_port.Text = "10002";
+            this.tb_port.Text = "10001";
             // 
             // tb_ip
             // 
@@ -291,7 +291,7 @@
             this.tb_ip.Name = "tb_ip";
             this.tb_ip.Size = new System.Drawing.Size(100, 21);
             this.tb_ip.TabIndex = 43;
-            this.tb_ip.Text = "192.168.1.55";
+            this.tb_ip.Text = "192.168.1.1";
             // 
             // connect
             // 
