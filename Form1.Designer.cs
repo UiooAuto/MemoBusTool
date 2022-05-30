@@ -35,7 +35,7 @@
             this.cb_IsNotUDWord = new System.Windows.Forms.CheckBox();
             this.cb_IsNotUWord = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.tb_SlaveNum = new System.Windows.Forms.TextBox();
+            this.tb_LocalCpuNum = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -60,6 +60,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.tb_WriteOffset = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.tb_TargetCpuNum = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btn_StopThreadRead
@@ -119,17 +121,17 @@
             this.label6.AutoSize = true;
             this.label6.Location = new System.Drawing.Point(257, 11);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(41, 12);
+            this.label6.Size = new System.Drawing.Size(47, 12);
             this.label6.TabIndex = 69;
-            this.label6.Text = "从站号";
+            this.label6.Text = "本CPU号";
             // 
-            // tb_SlaveNum
+            // tb_LocalCpuNum
             // 
-            this.tb_SlaveNum.Location = new System.Drawing.Point(259, 26);
-            this.tb_SlaveNum.Name = "tb_SlaveNum";
-            this.tb_SlaveNum.Size = new System.Drawing.Size(100, 21);
-            this.tb_SlaveNum.TabIndex = 68;
-            this.tb_SlaveNum.Text = "1";
+            this.tb_LocalCpuNum.Location = new System.Drawing.Point(259, 26);
+            this.tb_LocalCpuNum.Name = "tb_LocalCpuNum";
+            this.tb_LocalCpuNum.Size = new System.Drawing.Size(100, 21);
+            this.tb_LocalCpuNum.TabIndex = 68;
+            this.tb_LocalCpuNum.Text = "1";
             // 
             // label5
             // 
@@ -337,11 +339,30 @@
             this.tb_WriteOffset.TabIndex = 77;
             this.tb_WriteOffset.Text = "0";
             // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(377, 11);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(59, 12);
+            this.label9.TabIndex = 80;
+            this.label9.Text = "目标CPU号";
+            // 
+            // tb_TargetCpuNum
+            // 
+            this.tb_TargetCpuNum.Location = new System.Drawing.Point(379, 26);
+            this.tb_TargetCpuNum.Name = "tb_TargetCpuNum";
+            this.tb_TargetCpuNum.Size = new System.Drawing.Size(100, 21);
+            this.tb_TargetCpuNum.TabIndex = 79;
+            this.tb_TargetCpuNum.Text = "2";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(642, 608);
+            this.Controls.Add(this.label9);
+            this.Controls.Add(this.tb_TargetCpuNum);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.tb_WriteOffset);
             this.Controls.Add(this.label1);
@@ -352,7 +373,7 @@
             this.Controls.Add(this.cb_IsNotUDWord);
             this.Controls.Add(this.cb_IsNotUWord);
             this.Controls.Add(this.label6);
-            this.Controls.Add(this.tb_SlaveNum);
+            this.Controls.Add(this.tb_LocalCpuNum);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
@@ -378,8 +399,10 @@
             this.Text = "MemobusTool v";
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
+
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox tb_TargetCpuNum;
 
         #endregion
 
@@ -389,7 +412,7 @@
         private System.Windows.Forms.CheckBox cb_IsNotUDWord;
         private System.Windows.Forms.CheckBox cb_IsNotUWord;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.TextBox tb_SlaveNum;
+        private System.Windows.Forms.TextBox tb_LocalCpuNum;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;

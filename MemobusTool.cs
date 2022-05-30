@@ -15,7 +15,8 @@ namespace MemoBusTool
         private Socket socket;//用于通信的套接字
         private IPAddress ipAddress;//服务器的IP地址
         private int port;//服务器的端口
-        private byte cpuNum;
+        private byte localCpuNum;
+        private byte targetCpuNum;
 
         private IPEndPoint ipEndPoint;//服务器的通信节点
         private Thread readThread;//接受响应线程
@@ -42,10 +43,16 @@ namespace MemoBusTool
             get => overTime;
             set => overTime = value;
         }
-        public byte CpuNum
+        public byte LocalCpuNum
         {
-            get => cpuNum;
-            set => cpuNum = value;
+            get => localCpuNum;
+            set => localCpuNum = value;
+        }
+        
+        public byte TargetCpuNum
+        {
+            get => targetCpuNum;
+            set => targetCpuNum = value;
         }
 
         /// <summary>
@@ -53,13 +60,14 @@ namespace MemoBusTool
         /// </summary>
         /// <param name="iPAddress">服务器IP</param>
         /// <param name="port">服务器端口</param>
-        public MemobusTool(string iPAddress, int port, byte cpuNum)
+        public MemobusTool(string iPAddress, int port, byte localCpuNum, byte targetCpuNum)
         {
             this.ipAddress = IPAddress.Parse(iPAddress);
             this.port = port;
             this.ipEndPoint = new IPEndPoint(ipAddress, port);
             this.ping = new Ping();
-            this.cpuNum = cpuNum;
+            this.localCpuNum = localCpuNum;
+            this.targetCpuNum = targetCpuNum;
         }
 
         /*public InovanceModbusTCPTool()
@@ -250,7 +258,7 @@ namespace MemoBusTool
                 return readResult;
             }
 
-            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.cpuNum, DateType.M, address, 1);//创建请求报文
+            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.localCpuNum,this.localCpuNum, DateType.M, address, 1);//创建请求报文
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -308,7 +316,7 @@ namespace MemoBusTool
                 return readResult;
             }
 
-            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.cpuNum, DateType.M, address, reqNum);//创建请求报文
+            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.localCpuNum,this.targetCpuNum, DateType.M, address, reqNum);//创建请求报文
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -330,8 +338,8 @@ namespace MemoBusTool
                 return readResult;
             }
             readResult.isSuccess = true;
-            byte[] resultByte = new byte[checkRes.Respones.data[8]];//如果查找成功，则新建结果数组
             ushort v1 = BytesToUInt16(checkRes.Respones.data[21], checkRes.Respones.data[20]);
+            byte[] resultByte = new byte[v1 * 2];//如果查找成功，则新建结果数组
             Array.ConstrainedCopy(checkRes.Respones.data, 22, resultByte, 0, (v1*2));//从结果报文中获取结果内容
             readResult.result = BytesToUInt16s(resultByte);
 
@@ -368,7 +376,7 @@ namespace MemoBusTool
                 return readResult;
             }
 
-            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.cpuNum, DateType.M, address, 1);//创建请求报文
+            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.localCpuNum, this.targetCpuNum, DateType.M, address, 1);//创建请求报文
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -430,7 +438,7 @@ namespace MemoBusTool
                 return readResult;
             }
 
-            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.cpuNum, DateType.M, address, reqNum);//创建请求报文
+            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.localCpuNum, this.targetCpuNum, DateType.M, address, reqNum);//创建请求报文
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -602,7 +610,7 @@ namespace MemoBusTool
                 return false;
             }
             byte[] vs = Uint16ToBytes(value);
-            RequestCmd cmd = new RequestCMDWriteMore(MFC.Extend, cmdCode, this.cpuNum, DateType.M, address, 1, vs);
+            RequestCmd cmd = new RequestCMDWriteMore(MFC.Extend, cmdCode, this.localCpuNum, this.targetCpuNum, DateType.M, address, 1, vs);
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -654,7 +662,7 @@ namespace MemoBusTool
                 return false;
             }
             byte[] vs = Int16ToBytes(value);
-            RequestCmd cmd = new RequestCMDWriteMore(MFC.Extend, cmdCode, this.cpuNum, DateType.M, address, 1, vs);
+            RequestCmd cmd = new RequestCMDWriteMore(MFC.Extend, cmdCode, this.localCpuNum, this.targetCpuNum, DateType.M, address, 1, vs);
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -742,7 +750,7 @@ namespace MemoBusTool
                 return false;
             }
             byte[] vs = Uint16ToBytes(value);
-            RequestCmd cmd = new RequestCMDWriteMore(MFC.Extend, cmdCode, this.cpuNum, DateType.M, address, (UInt16)value.Length, vs);
+            RequestCmd cmd = new RequestCMDWriteMore(MFC.Extend, cmdCode, this.localCpuNum, this.targetCpuNum, DateType.M, address, (UInt16)value.Length, vs);
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -806,7 +814,7 @@ namespace MemoBusTool
                 return false;
             }
             byte[] vs = Int16ToBytes(value);
-            RequestCmd cmd = new RequestCMDWriteMore(MFC.Extend, cmdCode, this.cpuNum, DateType.M, address, (UInt16)value.Length, vs);
+            RequestCmd cmd = new RequestCMDWriteMore(MFC.Extend, cmdCode, this.localCpuNum, this.targetCpuNum, DateType.M, address, (UInt16)value.Length, vs);
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -1194,7 +1202,8 @@ namespace MemoBusTool
         public UInt16 length = 0x0C;//后续命令长度
         public MFC mfc;//主功能码
         public SFC sfc;//子功能码
-        public byte cpuNum;//CPU编号
+        public byte localCpuNum;//CPU编号
+        public byte targetCpuNum;//CPU编号
         public DateType dateType;//寄存器种类
         public uint startAddress;//起始地址
         public UInt16 reqNum;//读取数量
@@ -1204,18 +1213,20 @@ namespace MemoBusTool
         /// </summary>
         /// <param name="mfc">主功能码</param>
         /// <param name="sfc">子功能码</param>
-        /// <param name="cpuNum">本CPU编号</param>
+        /// <param name="localCpuNum">本CPU编号</param>
+        /// <param name="targetCpuNum">目标CPU编号</param>
         /// <param name="dateType">寄存器类型</param>
         /// <param name="startAddress">起始地址</param>
         /// <param name="reqNum">读取数量</param>
-        public RequestCMDRead(MFC mfc, SFC sfc, byte cpuNum, DateType dateType, uint startAddress, ushort reqNum)
+        public RequestCMDRead(MFC mfc, SFC sfc, byte localCpuNum,byte targetCpuNum, DateType dateType, uint startAddress, ushort reqNum)
         {
             sessionNum = MemobusTool.GetSessionNum();
             dateTotalLength = 26;
 
             this.mfc = mfc;
             this.sfc = sfc;
-            this.cpuNum = cpuNum;
+            this.localCpuNum = localCpuNum;
+            this.targetCpuNum = targetCpuNum;
             this.dateType = dateType;
             this.startAddress = startAddress;
             this.reqNum = reqNum;
@@ -1243,14 +1254,14 @@ namespace MemoBusTool
             bytes[13] = (byte)(length >> 8);
             bytes[14] = (byte)mfc;
             bytes[15] = (byte)sfc;
-            bytes[16] = cpuNum;
+            bytes[16] = (byte)(localCpuNum | (targetCpuNum << 4));
             bytes[17] = 0;
             bytes[18] = (byte)dateType;
             bytes[19] = 0;
             bytes[20] = (byte)(startAddress & 0x000000ff);
-            bytes[21] = (byte)(startAddress & 0x0000ff00);
-            bytes[22] = (byte)(startAddress & 0x00ff0000);
-            bytes[23] = (byte)(startAddress & 0xff000000);
+            bytes[21] = (byte)((startAddress & 0x0000ff00) >> 8);
+            bytes[22] = (byte)((startAddress & 0x00ff0000) >> 16);
+            bytes[23] = (byte)((startAddress & 0xff000000) >> 32);
             bytes[24] = (byte)(reqNum & 0x00ff);
             bytes[25] = (byte)(reqNum >> 8);
 
@@ -1263,7 +1274,8 @@ namespace MemoBusTool
         public UInt16 length;//后续命令长度
         public MFC mfc;//主功能码
         public SFC sfc;//子功能码
-        public byte cpuNum;//CPU编号
+        public byte localCpuNum;//CPU编号
+        public byte targetCpuNum;//CPU编号
         public DateType dateType;//寄存器种类
         public uint startAddress;//起始地址
         public UInt16 reqNum;//读取数量
@@ -1274,12 +1286,13 @@ namespace MemoBusTool
         /// </summary>
         /// <param name="mfc">主功能码</param>
         /// <param name="sfc">子功能码</param>
-        /// <param name="cpuNum">本CPU编号</param>
+        /// <param name="localCpuNum">本CPU编号</param>
+        /// <param name="targetCpuNum">本CPU编号</param>
         /// <param name="dateType">寄存器类型</param>
         /// <param name="startAddress">起始地址</param>
         /// <param name="reqNum">读取数量</param>
         /// <param name="bytes">要写入的字节数组</param>
-        public RequestCMDWriteMore(MFC mfc, SFC sfc, byte cpuNum, DateType dateType, uint startAddress, ushort reqNum, byte[] bytes)
+        public RequestCMDWriteMore(MFC mfc, SFC sfc, byte localCpuNum, byte targetCpuNum, DateType dateType, uint startAddress, ushort reqNum, byte[] bytes)
         {
             sessionNum = MemobusTool.GetSessionNum();
             dateTotalLength = (ushort)(26 + bytes.Length);
@@ -1287,7 +1300,8 @@ namespace MemoBusTool
             length = (UInt16)(12 + bytes.Length);
             this.mfc = mfc;
             this.sfc = sfc;
-            this.cpuNum = cpuNum;
+            this.localCpuNum = localCpuNum;
+            this.targetCpuNum = targetCpuNum;
             this.dateType = dateType;
             this.startAddress = startAddress;
             this.reqNum = reqNum;
@@ -1316,14 +1330,14 @@ namespace MemoBusTool
             bytes[13] = (byte)(length >> 8);
             bytes[14] = (byte)mfc;
             bytes[15] = (byte)sfc;
-            bytes[16] = cpuNum;
+            bytes[16] = (byte)(localCpuNum | (targetCpuNum << 4));
             bytes[17] = 0;
             bytes[18] = (byte)dateType;
             bytes[19] = 0;
             bytes[20] = (byte)(startAddress & 0x000000ff);
-            bytes[21] = (byte)(startAddress & 0x0000ff00);
-            bytes[22] = (byte)(startAddress & 0x00ff0000);
-            bytes[23] = (byte)(startAddress & 0xff000000);
+            bytes[21] = (byte)((startAddress & 0x0000ff00) >> 8);
+            bytes[22] = (byte)((startAddress & 0x00ff0000) >> 16);
+            bytes[23] = (byte)((startAddress & 0xff000000) >> 32);
             bytes[24] = (byte)(reqNum & 0x00ff);
             bytes[25] = (byte)(reqNum >> 8);
 

@@ -33,7 +33,7 @@ namespace MemoBusTool
         {
             if (connect.Text == "连接")
             {
-                plc = new MemobusTool(tb_ip.Text, int.Parse(tb_port.Text), byte.Parse(tb_SlaveNum.Text));
+                plc = new MemobusTool(tb_ip.Text, int.Parse(tb_port.Text), byte.Parse(tb_LocalCpuNum.Text), byte.Parse(tb_TargetCpuNum.Text));
                 bool v = plc.Connect();
                 if (!v)
                 {
