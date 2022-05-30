@@ -491,9 +491,13 @@ namespace MemoBusTool
             ReadResult<ushort[]> readResultUint16 = ReadU16(startAddress, 2);
 
             readResult.isSuccess = readResultUint16.isSuccess;
-            readResult.result = readResultUint16.result[1];
-            readResult.result = readResult.result << 16;
-            readResult.result = readResult.result | readResultUint16.result[0];
+
+            if (readResultUint16.isSuccess)
+            {
+                readResult.result = readResultUint16.result[1];
+                readResult.result = readResult.result << 16;
+                readResult.result = readResult.result | readResultUint16.result[0];
+            }
 
             return readResult;
         }
@@ -519,12 +523,16 @@ namespace MemoBusTool
             ReadResult<ushort[]> readResultUint16 = ReadU16(startAddress, (UInt16)(2 * reqNum));
 
             readResult.isSuccess = readResultUint16.isSuccess;
-            for (int i = 0; i < reqNum; i++)
+
+            if (readResultUint16.isSuccess)
             {
-                readResult.result[i] = readResultUint16.result[(2 * i) + 1];
-                readResult.result[i] = readResult.result[i] << 16;
-                readResult.result[i] = readResult.result[i] | readResultUint16.result[2 * i];
-            }
+                for (int i = 0; i < reqNum; i++)
+                {
+                    readResult.result[i] = readResultUint16.result[(2 * i) + 1];
+                    readResult.result[i] = readResult.result[i] << 16;
+                    readResult.result[i] = readResult.result[i] | readResultUint16.result[2 * i];
+                }
+            }            
 
             return readResult;
         }
@@ -547,10 +555,14 @@ namespace MemoBusTool
             ReadResult<ushort[]> readResultUint16 = ReadU16(startAddress, 2);
 
             readResult.isSuccess = readResultUint16.isSuccess;
-            result = readResultUint16.result[1];
-            result = result << 16;
-            result = result | readResultUint16.result[0];
-            readResult.result = result;
+
+            if (readResultUint16.isSuccess)
+            {
+                result = readResultUint16.result[1];
+                result = result << 16;
+                result = result | readResultUint16.result[0];
+                readResult.result = result;
+            }           
 
             return readResult;
         }
@@ -576,13 +588,17 @@ namespace MemoBusTool
             ReadResult<ushort[]> readResultUint16 = ReadU16(startAddress, (UInt16)(2 * reqNum));
 
             readResult.isSuccess = readResultUint16.isSuccess;
-            for (int i = 0; i < reqNum; i++)
+
+            if (readResultUint16.isSuccess)
             {
-                uint tempVar;
-                tempVar = readResultUint16.result[(2 * i) + 1];
-                tempVar = tempVar << 16;
-                tempVar = tempVar | readResultUint16.result[2 * i];
-                readResult.result[i] = (int)tempVar;
+                for (int i = 0; i < reqNum; i++)
+                {
+                    uint tempVar;
+                    tempVar = readResultUint16.result[(2 * i) + 1];
+                    tempVar = tempVar << 16;
+                    tempVar = tempVar | readResultUint16.result[2 * i];
+                    readResult.result[i] = (int)tempVar;
+                }
             }
 
             return readResult;
