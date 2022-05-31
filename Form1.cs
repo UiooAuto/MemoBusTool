@@ -66,7 +66,7 @@ namespace MemoBusTool
 
                 if (cb_IsNotUWord.Checked)
                 {
-                    ReadResult<Int16[]> readResult = plc.Read16(ReadAddressOffset(tb_ReadWordAddress.Text), (UInt16)num);
+                    ReadResult<Int16[]> readResult = plc.Read16(ReadAddressOffset(tb_ReadWordAddress.Text), num);
 
                     if (readResult.isSuccess)
                     {
@@ -79,7 +79,7 @@ namespace MemoBusTool
                 }
                 else
                 {
-                    ReadResult<UInt16[]> readResult = plc.ReadU16(tb_ReadWordAddress.Text, (UInt16)num);
+                    ReadResult<UInt16[]> readResult = plc.ReadU16(tb_ReadWordAddress.Text, num);
 
                     if (readResult.isSuccess)
                     {
@@ -249,7 +249,7 @@ namespace MemoBusTool
                 }
                 if (cb_IsNotUDWord.Checked)
                 {
-                    ReadResult<int[]> readResult = plc.Read32(ReadAddressOffset(tb_ReadDWordAddress.Text), (UInt16)num);
+                    ReadResult<int[]> readResult = plc.Read32(ReadAddressOffset(tb_ReadDWordAddress.Text), num);
                     if (readResult.isSuccess)
                     {
                         Show(JsonConvert.SerializeObject(readResult.result));
@@ -263,7 +263,7 @@ namespace MemoBusTool
                 {
                     if (cb_IsNotUDWord.Checked)
                     {
-                        ReadResult<int[]> readResult = plc.Read32(ReadAddressOffset(tb_ReadDWordAddress.Text), (UInt16)num);
+                        ReadResult<int[]> readResult = plc.Read32(ReadAddressOffset(tb_ReadDWordAddress.Text), num);
                         if (readResult.isSuccess)
                         {
                             Show(JsonConvert.SerializeObject(readResult.result));
@@ -275,7 +275,7 @@ namespace MemoBusTool
                     }
                     else
                     {
-                        ReadResult<uint[]> readResult = plc.ReadU32(ReadAddressOffset(tb_ReadDWordAddress.Text), (UInt16)num);
+                        ReadResult<uint[]> readResult = plc.ReadU32(ReadAddressOffset(tb_ReadDWordAddress.Text), num);
                         if (readResult.isSuccess)
                         {
                             Show(JsonConvert.SerializeObject(readResult.result));

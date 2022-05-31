@@ -294,7 +294,7 @@ namespace MemoBusTool
         /// <param name="startAddress">起始地址</param>
         /// <param name="reqNum">读取长度</param>
         /// <returns>读取到的字数组</returns>
-        public ReadResult<UInt16[]> ReadU16(string startAddress, ushort reqNum)
+        public ReadResult<UInt16[]> ReadU16(string startAddress, int reqNum)
         {
             ReadResult<UInt16[]> readResult = new ReadResult<UInt16[]>();//预备结果
 
@@ -316,7 +316,7 @@ namespace MemoBusTool
                 return readResult;
             }
 
-            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.localCpuNum,this.targetCpuNum, DateType.M, address, reqNum);//创建请求报文
+            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.localCpuNum,this.targetCpuNum, DateType.M, address, (ushort)reqNum);//创建请求报文
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -412,7 +412,7 @@ namespace MemoBusTool
         /// <param name="startAddress">起始地址</param>
         /// <param name="reqNum">读取长度</param>
         /// <returns>读取到的字数组</returns>
-        public ReadResult<Int16[]> Read16(string startAddress, ushort reqNum)
+        public ReadResult<Int16[]> Read16(string startAddress, int reqNum)
         {
             ReadResult<Int16[]> readResult = new ReadResult<Int16[]>();//预备结果
             //读取超出范围
@@ -438,7 +438,7 @@ namespace MemoBusTool
                 return readResult;
             }
 
-            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.localCpuNum, this.targetCpuNum, DateType.M, address, reqNum);//创建请求报文
+            RequestCmd cmd = new RequestCMDRead(MFC.Extend, cmdCode, this.localCpuNum, this.targetCpuNum, DateType.M, address, (ushort)reqNum);//创建请求报文
             CheckRes checkRes = new CheckRes(cmd.sessionNum);//创建检查响应目标对象
             bool v = SendTo(cmd);//发送请求
             Thread checkThread = new Thread(CheckRespones);//开启检查响应线程
@@ -509,7 +509,7 @@ namespace MemoBusTool
         /// <param name="startAddress">起始地址</param>
         /// <param name="reqNum">读取长度</param>
         /// <returns>读取到的字数组</returns>
-        public ReadResult<uint[]> ReadU32(string startAddress, ushort reqNum)
+        public ReadResult<uint[]> ReadU32(string startAddress, int reqNum)
         {
             ReadResult<uint[]> readResult = new ReadResult<uint[]>();//预备结果
             //读取超出范围
@@ -520,7 +520,7 @@ namespace MemoBusTool
             }
             readResult.result = new uint[reqNum];
 
-            ReadResult<ushort[]> readResultUint16 = ReadU16(startAddress, (UInt16)(2 * reqNum));
+            ReadResult<ushort[]> readResultUint16 = ReadU16(startAddress, 2 * reqNum);
 
             readResult.isSuccess = readResultUint16.isSuccess;
 
@@ -574,7 +574,7 @@ namespace MemoBusTool
         /// <param name="startAddress">起始地址</param>
         /// <param name="reqNum">读取长度</param>
         /// <returns>读取到的字数组</returns>
-        public ReadResult<int[]> Read32(string startAddress, ushort reqNum)
+        public ReadResult<int[]> Read32(string startAddress, int reqNum)
         {
             ReadResult<int[]> readResult = new ReadResult<int[]>();//预备结果
             //读取超出范围
@@ -585,7 +585,7 @@ namespace MemoBusTool
             }
             readResult.result = new int[reqNum];
 
-            ReadResult<ushort[]> readResultUint16 = ReadU16(startAddress, (UInt16)(2 * reqNum));
+            ReadResult<ushort[]> readResultUint16 = ReadU16(startAddress, 2 * reqNum);
 
             readResult.isSuccess = readResultUint16.isSuccess;
 
