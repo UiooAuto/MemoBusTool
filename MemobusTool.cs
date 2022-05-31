@@ -606,6 +606,43 @@ namespace MemoBusTool
 
         #endregion
 
+
+        #region 读取字符串
+
+        /// <summary>
+        /// 读取多个双字
+        /// </summary>
+        /// <param name="startAddress">起始地址</param>
+        /// <param name="reqNum">读取长度</param>
+        /// <returns>读取到的字符串</returns>
+        public ReadResult<string> ReadString(string startAddress, int reqNum)
+        {
+            ReadResult<string> readResult = new ReadResult<string>();//预备结果
+            //读取超出范围
+            if (reqNum > 4088)
+            {
+                readResult.errorCode = 0x50;
+                return readResult;
+            }
+            readResult.result = "";
+
+            int readLength = (reqNum + 1) / 2;
+            ReadResult<ushort[]> readResultUint16 = ReadU16(startAddress, readLength);
+
+            readResult.isSuccess = readResultUint16.isSuccess;
+
+            if (readResultUint16.isSuccess)
+            {
+                byte[] bytes = Uint16ToBytes(readResultUint16.result);
+                string result = Encoding.ASCII.GetString(bytes, 0, reqNum);
+                readResult.result = result;  
+            }
+
+            return readResult;
+        }
+
+        #endregion
+
         #endregion
 
         #region 写入数据
@@ -922,6 +959,30 @@ namespace MemoBusTool
             return v;
         }
 
+        /// <summary>
+        /// 写入字符串，最大长度不可以超过4088
+        /// </summary>
+        /// <param name="startAddress">起始地址</param>
+        /// <param name="value">要写入的数据</param>
+        /// <returns>写入是否成功</returns>
+        public bool Write(string startAddress, string value)
+        {
+            //检查写入是否超长
+            if (value.Length > 4088)
+            {
+                return false;
+            }
+            int length = (value.Length + 1) / 2;
+
+            byte[] bytes = Encoding.ASCII.GetBytes(value);
+
+            ushort[] tempArr = BytesToUInt16s(bytes);
+
+            bool v = Write(startAddress, tempArr);
+
+            return v;
+        }
+
         #endregion
 
         #endregion
@@ -1025,16 +1086,38 @@ namespace MemoBusTool
             return result;
         }
 
+        /// <summary>
+        /// 将byte数组转换为uint16数组
+        /// 目前格式为byte[2n]为低位，byte[2n+1]为高位
+        /// </summary>
+        /// <param name="bytes">要转换的byte数组</param>
+        /// <returns>转换后的uint16数组</returns>
         public UInt16[] BytesToUInt16s(byte[] bytes)
         {
-            UInt16[] ints = new UInt16[bytes.Length / 2];
-            for (int i = 0; i < ints.Length; i++)
+            //准备结果
+            UInt16[] uints = new UInt16[(bytes.Length / 2) + 1];
+
+            //遍历参数
+            for (int i = 0; i < uints.Length; i++)
             {
-                ints[i] = bytes[(i * 2) + 1];
-                ints[i] = (UInt16)(ints[i] << 8);
-                ints[i] = (UInt16)(ints[i] | bytes[i * 2]);
+                //准备数组下标，避免多次运算
+                int n = 2 * i;
+
+                //将第n个参数值写入结果低位
+                uints[i] = bytes[n];
+
+                //判断是否超出参数长度
+                if (n + 1 < bytes.Length)
+                {
+                    //将第n + 1个参数左移8位后于结果位或，得到合并后的值
+                    uints[i] = (UInt16)(uints[i] | ((bytes[n + 1]) << 8));
+                }
+
+                /*uints[i] = bytes[(i * 2) + 1];
+                uints[i] = (UInt16)(uints[i] << 8);
+                uints[i] = (UInt16)(uints[i] | bytes[i * 2]);*/
             }
-            return ints;
+            return uints;
         }
 
         /// <summary>
