@@ -422,5 +422,31 @@ namespace MemoBusTool
                 return null;
             }
         }
+
+        private void btn_ReadString_Click(object sender, EventArgs e)
+        {
+            ReadResult<string> readResult = plc.ReadString(tb_ReadStringAddress.Text, int.Parse(tb_ReadStringLength.Text));
+            if (readResult.isSuccess)
+            {
+                Show(readResult.result);
+            }
+            else
+            {
+                Show("读取失败");
+            }
+        }
+
+        private void btn_WriteString_Click(object sender, EventArgs e)
+        {
+            bool v = plc.Write(tb_WriteStringAddress.Text, tb_WriteString.Text);
+            if (v)
+            {
+                Show("写入成功");
+            }
+            else
+            {
+                Show("写入失败");
+            }
+        }
     }
 }
