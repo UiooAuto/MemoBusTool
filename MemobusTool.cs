@@ -156,7 +156,7 @@ namespace MemoBusTool
         /// 获取会话编号
         /// </summary>
         /// <returns>返回本次交互所需的会话编号</returns>
-        public static UInt16 GetSessionNum()
+        public static byte GetSessionNum()
         {
             ComSessionNum++;
             if (ComSessionNum == 0)
