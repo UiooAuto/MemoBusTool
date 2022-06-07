@@ -156,9 +156,14 @@ namespace MemoBusTool
         /// 获取会话编号
         /// </summary>
         /// <returns>返回本次交互所需的会话编号</returns>
-        public static byte GetSessionNum()
+        public static UInt16 GetSessionNum()
         {
-            return ComSessionNum++;
+            ComSessionNum++;
+            if (ComSessionNum == 0)
+            {
+                ComSessionNum = 1;
+            }
+            return ComSessionNum;
         }
 
         private bool SendTo(RequestCmd cmd)
