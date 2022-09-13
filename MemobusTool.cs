@@ -1100,7 +1100,12 @@ namespace MemoBusTool
         public UInt16[] BytesToUInt16s(byte[] bytes)
         {
             //准备结果
-            UInt16[] uints = new UInt16[(bytes.Length / 2) + 1];
+            int uintLength = bytes.Length / 2;
+            if (bytes.Length % 2 != 0)
+            {
+                uintLength++;
+            }
+            UInt16[] uints = new UInt16[uintLength];
 
             //遍历参数
             for (int i = 0; i < uints.Length; i++)
